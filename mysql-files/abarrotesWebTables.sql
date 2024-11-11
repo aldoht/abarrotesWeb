@@ -1,0 +1,64 @@
+CREATE DATABASE IF NOT EXISTS abarrotesWeb;
+
+USE abarrotesWeb;
+
+CREATE TABLE IF NOT EXISTS User (
+	user_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    name VARCHAR(25) UNIQUE NOT NULL,
+    password CHAR(64) NOT NULL,
+    isOwner BIT NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id)
+    );
+CREATE TABLE IF NOT EXISTS Payment_Method (
+	payment_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    name VARCHAR(20) NOT NULL,
+    PRIMARY KEY (payment_id)
+    );
+CREATE TABLE IF NOT EXISTS Ticket (
+	ticket_id INT UNSIGNED AUTO_INCREMENT,
+    user_id INT UNSIGNED NOT NULL,
+    date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    payment_id INT UNSIGNED NOT NULL,
+    amount DECIMAL(8,3) NOT NULL,
+    PRIMARY KEY (ticket_id),
+    FOREIGN KEY (user_id) REFERENCES User(user_id),
+    FOREIGN KEY (payment_id) REFERENCES Payment_Method(payment_id)
+    );
+CREATE TABLE IF NOT EXISTS Product_Type (
+	type_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    name VARCHAR(20) NOT NULL,
+    description VARCHAR(50) NOT NULL,
+    creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modification_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (type_id)
+    );
+CREATE TABLE IF NOT EXISTS Stock (
+	stock_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    available DECIMAL(6,2) NOT NULL DEFAULT 1,
+    minimum DECIMAL(6,2) NOT NULL DEFAULT 1,
+    last_restock TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (stock_id)
+    );
+CREATE TABLE IF NOT EXISTS Product (
+	product_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    name VARCHAR(40) NOT NULL,
+    type_id INT UNSIGNED NOT NULL,
+    description VARCHAR(50) NOT NULL,
+    barcode VARCHAR(14) NOT NULL,
+    unit_price DECIMAL(6,2) NOT NULL,
+    stock_id INT UNSIGNED NOT NULL,
+    creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modification_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (product_id),
+    FOREIGN KEY (type_id) REFERENCES Product_Type(type_id),
+    FOREIGN KEY (stock_id) REFERENCES Stock(stock_id)
+    );
+CREATE TABLE IF NOT EXISTS Ticket_Product (
+	tp_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    ticket_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
+    quantity DECIMAL(5,2) NOT NULL DEFAULT 1,
+    PRIMARY KEY (tp_id),
+    FOREIGN KEY (ticket_id) REFERENCES Ticket(ticket_id),
+    FOREIGN KEY (product_id) REFERENCES Product(product_id)
+    );

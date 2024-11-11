@@ -1,95 +1,87 @@
 from flask import Flask, render_template, request, redirect, flash
-from flask_mysqldb import MySQL
-import MySQLdb.cursors
+import pymysql, hashlib
+from dbconfig import get_db_connection
+from dbinfo import secretKey
 
 app = Flask(__name__)
 
-# Configuración de MySQL
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'apolo9404'
-app.config['MYSQL_DB'] = 'tienda'
-app.config['MYSQL_HOST'] = 'localhost'
+app.secret_key = secretKey
 
-app.secret_key = 'supersecretkey'
+def getUsers():
+    connection = get_db_connection()
+    if (connection is None):
+        return render_template("error.html")
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
 
-mysql = MySQL(app)
-
-@app.route('/')
-def home():
-    return render_template("frm.html")
-
-@app.route('/add_product', methods=['POST', 'GET'])
-def add_product():
     try:
-        if request.method == "POST":
-            name = request.form['name']
-            price = request.form['price']
-            quantity = request.form['quantity']
-
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            sql = "INSERT INTO productos (name, price, quantity) VALUES (%s, %s, %s)"
-            values = (name, price, quantity)
-            cursor.execute(sql, values)
-            mysql.connection.commit()
-            cursor.close()
-
-            flash('Producto agregado exitosamente')
-            return redirect('/')
-    except Exception as e:
-        print(e)
-    return render_template("frm.html")
-
-@app.route('/show_products')
-def show_products():
-    products = []
-    try:
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("SELECT * FROM productos")
-        products = cursor.fetchall()
+        cursor.execute("SELECT * FROM User")
+        usersFromDb = cursor.fetchall()
+    except pymysql.MySQLError as e:
+        print(f"Error: {e}")
+        usersFromDb = []
+    finally:
         cursor.close()
-    except Exception as e:
-        print(e)
-    return render_template("out.html", productos=products)
-
-@app.route('/delete_product/<int:id>', methods=['GET'])
-def delete_product(id):
-    try:
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        sql = "DELETE FROM productos WHERE id = %s"
-        cursor.execute(sql, (id,))
-        mysql.connection.commit()
-        cursor.close()
-
-        flash('Producto eliminado exitosamente')
-    except Exception as e:
-        print(e)
-    return redirect('/show_products')
-
-@app.route('/edit_product/<int:id>', methods=['GET', 'POST'])
-def edit_product(id):
-    product = None
-    if request.method == 'GET':
-        # Obtener los detalles actuales del producto
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("SELECT * FROM productos WHERE id = %s", (id,))
-        product = cursor.fetchone()
-        cursor.close()
-        return render_template('edit_product.html', product=product)
+        connection.close()
     
-    elif request.method == 'POST':
-        # Obtener los nuevos valores del formulario
-        new_price = request.form['price']
-        new_quantity = request.form['quantity']
-        
-        # Actualizar los datos del producto en la base de datos
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        sql = "UPDATE productos SET price = %s, quantity = %s WHERE id = %s"
-        cursor.execute(sql, (new_price, new_quantity, id))
-        mysql.connection.commit()
-        cursor.close()
+    return usersFromDb
 
-        flash('Producto actualizado exitosamente')
-        return redirect('/show_products')
+def getProducts():
+    connection = get_db_connection()
+    if (connection is None):
+        return render_template("error.html")
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
+    try:
+        cursor.execute("SELECT * FROM Product_Type")
+        productsFromDb = cursor.fetchall()
+    except pymysql.MySQLError as e:
+        print(f"Error: {e}")
+        productsFromDb = []
+    finally:
+        cursor.close()
+        connection.close()
+
+    return productsFromDb
+
+def checkCredentials(request: any):
+    user = request.form['username']
+    password = request.form['password']
+
+    hashed_pass = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), b'', 100000).hex()
+
+    connection = get_db_connection()
+    if (connection is None):
+        return render_template("error.html")
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
+    try:
+        cursor.execute("SELECT name FROM User WHERE name = %s AND password = %s", (user, hashed_pass))
+        userDb = cursor.fetchone()
+
+        if (userDb):
+            flash('Se inició sesión correctamente')
+            return True
+        flash('Error al iniciar sesión')
+        return False
+    except pymysql.MySQLError as e:
+        print(f"Error: {e}")
+        flash('Error al iniciar sesión')
+    finally:
+        cursor.close()
+        connection.close()  
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if (request.method == 'GET'):
+        return render_template('login.html')
+    if (request.method == 'POST'):
+        if (checkCredentials(request)):
+            return redirect('/home/')
+        return redirect('/')
+
+@app.route('/home/', methods=['GET', 'POST'])
+def home():
+    return render_template('home.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
