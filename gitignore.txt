@@ -1,3 +1,0 @@
-.gitignore
-dbinfo.py
-test.py
