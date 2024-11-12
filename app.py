@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, jsonify
 import pymysql, hashlib
 from dbconfig import get_db_connection
 from dbinfo import secretKey
@@ -32,7 +32,10 @@ def getProducts():
     cursor = connection.cursor(pymysql.cursors.DictCursor)
 
     try:
-        cursor.execute("SELECT * FROM Product_Type")
+        cursor.execute('''SELECT p.name, pt.name as product_type, p.description, p.barcode, p.unit_price, s.available, s.minimum
+                        FROM Product p
+                        INNER JOIN Product_Type pt ON pt.type_id = p.type_id
+                        INNER JOIN Stock s ON s.stock_id = p.stock_id;''')
         productsFromDb = cursor.fetchall()
     except pymysql.MySQLError as e:
         print(f"Error: {e}")
@@ -93,6 +96,8 @@ def trySignUp(request: any) -> bool:
         cursor.close()
         connection.close()
 
+
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if (request.method == 'GET'):
@@ -102,10 +107,6 @@ def login():
             return redirect('/home/')
         return redirect('/')
 
-@app.route('/home/', methods=['GET', 'POST'])
-def home():
-    return render_template('home.html')
-
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if (request.method == 'GET'):
@@ -113,6 +114,41 @@ def signup():
     elif (request.method == 'POST'):
         trySignUp(request)
         return redirect('/')
+
+@app.route('/home/', methods=['GET'])
+def home():
+    return render_template('home.html', products=getProducts())
+
+@app.route('/home/ticket', methods=['GET', 'POST'])
+def ticket():
+    if (request.method == 'GET'):
+        return render_template('ticket.html')
+    elif (request.method == 'POST'):
+        pass
+
+@app.route('/get_product', methods=['GET'])
+def get_product(name: str):
+    connection = get_db_connection()
+    if (connection is None):
+        return jsonify(success=False)
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
+    try:
+        cursor.execute('''SELECT p.name, pt.name as product_type, p.description, p.barcode, p.unit_price, s.available, s.minimum
+                        FROM Product p
+                        INNER JOIN Product_Type pt ON pt.type_id = p.type_id
+                        INNER JOIN Stock s ON s.stock_id = p.stock_id
+                        WHERE p.name = %s;''', (name,))
+        product = cursor.fetchone()
+    except pymysql.MySQLError as e:
+        print(f"Error: {e}")
+        product = None
+    finally:
+        cursor.close()
+        connection.close()
+
+    return product
+
 
 if __name__ == "__main__":
     app.run(debug=True)
