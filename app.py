@@ -119,6 +119,31 @@ def signup():
 def home():
     return render_template('home.html', products=getProducts())
 
+@app.route('/home/add_product', methods=['GET', 'POST'])
+def new_product():
+    if (request.method == 'GET'):
+        return render_template('addProduct.html')
+    elif (request.method == 'POST'):
+        pass
+
+@app.route('/home/modify_product', methods=['GET', 'POST'])
+def modify_product():
+    if (request.method == 'GET'):
+        return render_template('modifyProduct.html')
+    elif (request.method == 'POST'):
+        pass
+
+@app.route('/home/show_tickets', methods=['GET'])
+def show_tickets():
+    return render_template('showTickets.html')
+
+@app.route('/home/delete_product', methods=['GET', 'POST'])
+def delete_product():
+    if (request.method == 'GET'):
+        return render_template('deleteProduct.html')
+    elif (request.method == 'POST'):
+        pass
+
 @app.route('/home/ticket', methods=['GET', 'POST'])
 def ticket():
     if (request.method == 'GET'):
