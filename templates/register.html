@@ -3,29 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-    <title>Login</title>
+    <title>Register</title>
 </head>
 <body>
     <div class="page-container">
         <h1>Abarrotes Web</h1>
         <div class="main-container">
-            <h2>Login</h2>
-            <form name="login-info" method="post" class="login-box">
-                <div class="login-container">
+            <h2>Register</h2>
+            <form name="register-info" method="post" class="register-box">
+                <div class="register-container">
                     <label for="username">User</label>
                     <input type="text" name="username" required>
                 </div>
-                <div class="login-container">
+                <div class="register-container">
                     <label for="password">Password</label>
                     <input type="text" name="password" required>
                 </div>
-                <div class="login-container buttons">
-                    <button type="submit" formaction="{{ url_for('home') }}">Login</button>
-                    <a href="{{ url_for('register') }}" class="button-link">Register</a>
+                <div class="register-container">
+                    <label for="isOwner">Is Owner?</label>
+                    <select name="owner-select">
+                        <option value="yes">Yes</option>
+                        <option value="no" selected>No</option>
+                      </select>
+                </div>
+                <div class="register-container buttons">
+                    <a href="{{ url_for('login') }}" class="button-link">Login</a>
+                    <button type="submit" formaction="{{ url_for('home') }}">Register</button>
                 </div>
             </form>
         </div>

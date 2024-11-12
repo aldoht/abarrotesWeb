@@ -12,11 +12,11 @@ body {
     gap: 2rem;
     align-items: center;
     justify-content: center;
-    background-color: #1A1A1D;
+    background-color: #6A1E55;
     color: whitesmoke;
 }
 
-.main-container, .login-box {
+.main-container, .register-box {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -24,9 +24,9 @@ body {
 }
 
 .main-container {
-    height: 35%;
+    height: 50%;
     width: 30%;
-    background-color: #6A1E55;
+    background-color: #1A1A1D;
     border-radius: 5rem;
 }
 
@@ -34,12 +34,12 @@ body {
     text-align: center;
 }
 
-.login-box {
+.register-box {
     height: 70%;
     width: 70%;
 }
 
-.login-container {
+.register-container {
     height: 100%;
     width: 100%;
     padding: 0 2rem;
@@ -48,17 +48,17 @@ body {
     justify-content: space-around;
 }
 
-.login-container > input, .login-container > label, .buttons > button {
+.register-container > input, .register-container > label, .buttons > button {
     font-size: 1.1rem;
 }
 
-.login-container > input {
+.register-container > input {
     padding: 0.6rem;
     background-color: whitesmoke;
     border: none;
 }
 
-.login-container > button {
+.register-container > button {
     width: 40%;
 }
 
