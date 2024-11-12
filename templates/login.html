@@ -1,3 +1,5 @@
+{% extends "messages.html" %}
+{% block body %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,21 +16,22 @@
         <h1>Abarrotes Web</h1>
         <div class="main-container">
             <h2>Login</h2>
-            <form name="login-info" method="post" class="login-box">
+            <form action="{{ url_for('login') }}" method="post" class="login-box">
                 <div class="login-container">
                     <label for="username">User</label>
-                    <input type="text" name="username" required>
+                    <input type="text" id="username" name="username" required>
                 </div>
                 <div class="login-container">
                     <label for="password">Password</label>
-                    <input type="text" name="password" required>
+                    <input type="password" id="password" name="password" required>
                 </div>
                 <div class="login-container buttons">
-                    <button type="submit" formaction="{{ url_for('home') }}">Login</button>
-                    <a href="{{ url_for('register') }}" class="button-link">Register</a>
+                    <button type="submit">Login</button>
+                    <a href="{{ url_for('signup') }}" class="button-link">Sign Up</a>
                 </div>
             </form>
         </div>
     </div>
+{% endblock %}
 </body>
 </html>

@@ -75,7 +75,7 @@ DELIMITER //
 CREATE TRIGGER tr_u_prevent_more_owners BEFORE INSERT ON User
 FOR EACH ROW
 BEGIN
-	IF NEW.isOwner = 1 AND (SELECT COUNT(*) FROM User WHERE isOwner = 1) > 0 THEN
+	IF NEW.is_owner = 1 AND (SELECT COUNT(*) FROM User WHERE is_owner = 1) > 0 THEN
 		SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'There must be only one owner.';
 	END IF;
@@ -86,7 +86,7 @@ DELIMITER //
 CREATE TRIGGER tr_u_prevent_new_owner BEFORE UPDATE ON User
 FOR EACH ROW
 BEGIN
-	IF NEW.isOwner = 1 AND (SELECT COUNT(*) FROM User WHERE isOwner = 1) > 0 THEN
+	IF NEW.is_owner = 1 AND (SELECT COUNT(*) FROM User WHERE is_owner = 1) > 0 THEN
 		SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'There must be only one owner.';
 	END IF;

@@ -61,20 +61,43 @@ def checkCredentials(request: any):
         if (userDb):
             flash('Se inició sesión correctamente')
             return True
-        flash('Error al iniciar sesión')
+        flash(f'Usuario o contraseña incorrecto.')
         return False
     except pymysql.MySQLError as e:
-        print(f"Error: {e}")
-        flash('Error al iniciar sesión')
+        print(f'Error: {e}')
+        flash(f'Error al iniciar sesión: {e}')
     finally:
         cursor.close()
-        connection.close()  
+        connection.close()
+
+def trySignUp(request: any) -> bool:
+    user = request.form['username']
+    password = request.form['password']
+    is_owner = int(request.form['isOwner'])
+
+    hashed_pass = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), b'', 100000).hex()
+
+    connection = get_db_connection()
+    if (connection is None):
+        return render_template("error.html")
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
+    try:
+        cursor.execute("INSERT INTO User (name, password, is_owner) VALUES (%s, %s, %s)", (user, hashed_pass, is_owner))
+        connection.commit()
+        flash(f'Usuario creado correctamente')
+    except pymysql.MySQLError as e:
+        print(f'Error: {e}')
+        flash(f'Error al crear el usuario: {e}')
+    finally:
+        cursor.close()
+        connection.close()
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if (request.method == 'GET'):
         return render_template('login.html')
-    if (request.method == 'POST'):
+    elif (request.method == 'POST'):
         if (checkCredentials(request)):
             return redirect('/home/')
         return redirect('/')
@@ -83,9 +106,13 @@ def login():
 def home():
     return render_template('home.html')
 
-@app.route('/registro', methods=['GET', 'POST'])
-def register():
-    return render_template('register.html')
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if (request.method == 'GET'):
+        return render_template('signup.html')
+    elif (request.method == 'POST'):
+        trySignUp(request)
+        return redirect('/')
 
 if __name__ == "__main__":
     app.run(debug=True)
