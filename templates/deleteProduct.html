@@ -1,11 +1,66 @@
+{% extends "messages.html" %}
+
+{% block body %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delete product</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: "Roboto", sans-serif;
+        }
+    </style>
+    <title>Eliminar Producto</title>
 </head>
 <body>
-    <h1>Delete product</h1>
+    <div class="container py-5">
+        <h1 class="text-center mb-4">Abarrotes Web</h1>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-lg">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Eliminar Producto</h2>
+
+                        {% if products %}
+                            <p class="text-center mb-4">Selecciona un producto para eliminar:</p>
+
+                            <form action="/home/delete_product" method="POST">
+                                {% for product in products %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="product_id" id="product_{{ product['product_id'] }}" value="{{ product['product_id'] }}" required>
+                                        <label class="form-check-label" for="product_{{ product['product_id'] }}">
+                                            {{ product['name'] }} - {{ product['description'] }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                                
+                                <div class="form-group text-center mt-4">
+                                    <button type="submit" class="btn btn-danger btn-block">Eliminar Producto</button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <p class="text-center">No hay productos disponibles para eliminar.</p>
+                        {% endif %}
+
+                        <div class="form-group text-center mt-4">
+                            <a href="{{ url_for('home') }}" class="btn btn-secondary">Volver al Inicio</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
+{% endblock %}

@@ -122,10 +122,50 @@ def home():
 
 @app.route('/home/add_product', methods=['GET', 'POST'])
 def new_product():
-    if (request.method == 'GET'):
-        return render_template('addProduct.html')
-    elif (request.method == 'POST'):
-        pass
+    if request.method == 'GET':
+        connection = get_db_connection()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        
+        try:
+            cursor.execute("SELECT type_id, name FROM Product_Type")
+            product_types = cursor.fetchall()
+        except pymysql.MySQLError as e:
+            print(f"Error al obtener tipos de producto: {e}")
+            product_types = []
+        finally:
+            cursor.close()
+            connection.close()
+
+        return render_template('addProduct.html', product_types=product_types)
+    
+    elif request.method == 'POST':
+        name = request.form['name']
+        type_id = request.form['type_id']
+        description = request.form['description']
+        barcode = request.form['barcode']
+        unit_price = request.form['unit_price']
+        stock = request.form['stock']
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute("INSERT INTO Stock (available) VALUES (%s)", (stock,))
+            stock_id = cursor.lastrowid
+
+            cursor.execute('''INSERT INTO Product (name, type_id, description, barcode, unit_price, stock_id)
+                              VALUES (%s, %s, %s, %s, %s, %s)''', (name, type_id, description, barcode, unit_price, stock_id))
+
+            connection.commit()
+            flash('Producto agregado exitosamente.')
+            return redirect('/home/')
+        except pymysql.MySQLError as e:
+            print(f"Error al agregar producto: {e}")
+            flash(f"Error al agregar el producto: {e}")
+            return redirect('/home/add_product')
+        finally:
+            cursor.close()
+            connection.close()
 
 @app.route('/home/modify_product', methods=['GET', 'POST'])
 def modify_product():
@@ -134,16 +174,49 @@ def modify_product():
     elif (request.method == 'POST'):
         pass
 
+
 @app.route('/home/show_tickets', methods=['GET'])
 def show_tickets():
     return render_template('showTickets.html')
 
 @app.route('/home/delete_product', methods=['GET', 'POST'])
 def delete_product():
-    if (request.method == 'GET'):
-        return render_template('deleteProduct.html')
-    elif (request.method == 'POST'):
-        pass
+    if request.method == 'GET':
+        # Mostrar los productos disponibles para eliminar
+        # Asegúrate de que la función getProducts() recupere correctamente los productos de la base de datos
+        connection = get_db_connection()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        
+        try:
+            cursor.execute("SELECT * FROM Product")
+            products = cursor.fetchall()  # Recupera todos los productos
+            return render_template('deleteProduct.html', products=products)
+        except pymysql.MySQLError as e:
+            print(f"Error al obtener los productos: {e}")
+            flash("Error al cargar los productos")
+            return redirect('/home/')
+        finally:
+            cursor.close()
+            connection.close()
+    
+    elif request.method == 'POST':
+        product_id = request.form['product_id']
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        try:            
+            cursor.execute("DELETE FROM Product WHERE product_id = %s", (product_id,))
+            connection.commit() 
+            flash("Producto eliminado correctamente")
+            return redirect('/home/')
+        except pymysql.MySQLError as e:
+            print(f"Error al eliminar el producto: {e}")
+            flash("Error al eliminar el producto")
+            return redirect('/home/')
+        finally:
+            cursor.close()
+            connection.close()
+
 
 @app.route('/home/ticket', methods=['GET', 'POST'])
 def ticket():
