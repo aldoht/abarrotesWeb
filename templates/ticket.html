@@ -13,17 +13,205 @@
         body {
             margin: 0;
             font-family: "Roboto", sans-serif;
+            padding: 20px;
+        }
+        .ticket-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+        .success-message {
+            color: green;
+            margin-top: 10px;
+        }
+        .search-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
         }
     </style>
-    <script src="{{ url_for('static', filename='js/ticket.js') }}"></script>
     <title>Ticket</title>
 </head>
 <body>
-    <label for="barcode">Barcode</label>
-    <input type="text" id="barcode">
-    <label for="name">Name</label>
-    <input type="text" id="name">
-    <button onclick="addProduct()">Add</button>
+    <div class="container">
+        <div class="search-box">
+            <h4 class="mb-3">Search Product</h4>
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="input-group mb-3">
+                        <input type="text" id="barcode" class="form-control" placeholder="Scan or enter barcode">
+                        <div class="input-group-append">
+                            <button onclick="searchByBarcode()" class="btn btn-primary">Search Barcode</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="input-group mb-3">
+                        <input type="text" id="name" class="form-control" placeholder="Enter product name">
+                        <div class="input-group-append">
+                            <button onclick="searchByName()" class="btn btn-primary">Search Name</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex justify-content-center align-items-end">
+                    <button class="btn btn-success btn-block" onclick="checkout()">Checkout</button>
+                </div>
+            </div>
+        </div>        
+
+        <div id="productList" class="mt-4">
+            <!-- Products will be displayed here -->
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+    </div>
+
+    <script>
+        let itemsOnTicket = [];
+
+        document.getElementById('barcode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchByBarcode();
+            }
+        });
+        document.getElementById('name').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchByName();
+            }
+        });
+
+        function displayProducts() {
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '';
+
+            itemsOnTicket.forEach((item, index) => {
+                if (item.data) {
+                    const product = item.data;
+                    const productElement = document.createElement('div');
+                    productElement.className = 'ticket-item';
+                    productElement.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <h5>${product.name}</h5>
+                            <button onclick="removeProduct(${index})" class="btn btn-danger btn-sm">Remove</button>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <p>Type: ${product.product_type}</p>
+                                <p>Description: ${product.description}</p>
+                            </div>
+                            <div class="col">
+                                <p>Barcode: ${product.barcode}</p>
+                                <p>Price: $${product.unit_price}</p>
+                            </div>
+                            <div class="col">
+                                <p>Available: ${product.available}</p>
+                                <p>Minimum: ${product.minimum}</p>
+                            </div>
+                        </div>
+                    `;
+                    productList.appendChild(productElement);
+                }
+            });
+
+            if (itemsOnTicket.length > 0) {
+                const total = itemsOnTicket.reduce((sum, item) => {
+                    return sum + (item.data ? parseFloat(item.data.unit_price) : 0);
+                }, 0);
+
+                const totalElement = document.createElement('div');
+                totalElement.className = 'mt-3 h4 text-right';
+                totalElement.textContent = `Total: $${total.toFixed(2)}`;
+                productList.appendChild(totalElement);
+            }
+        }
+
+        function removeProduct(index) {
+            itemsOnTicket.splice(index, 1);
+            displayProducts();
+        }
+
+        function showMessage(message, isError = false) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            
+            errorDiv.textContent = isError ? message : '';
+            successDiv.textContent = !isError ? message : '';
+            
+            setTimeout(() => {
+                errorDiv.textContent = '';
+                successDiv.textContent = '';
+            }, 3000);
+        }
+
+        function searchByBarcode() {
+            const barcode = document.getElementById('barcode').value;
+            
+            if (!barcode) {
+                showMessage('Please enter a barcode', true);
+                return;
+            }
+
+            fetch(`/get_product_by_barcode/${encodeURIComponent(barcode)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Failed to fetch product');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    itemsOnTicket.push(data);
+                    displayProducts();
+                    document.getElementById('barcode').value = '';
+                    showMessage('Product added successfully');
+                })
+                .catch(error => {
+                    showMessage(error.message, true);
+                    console.error('Error:', error);
+                });
+        }
+
+        function searchByName() {
+            const name = document.getElementById('name').value;
+            
+            if (!name) {
+                showMessage('Please enter a product name', true);
+                return;
+            }
+
+            fetch(`/get_product_by_name/${encodeURIComponent(name)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Failed to fetch product');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    itemsOnTicket.push(data);
+                    displayProducts();
+                    document.getElementById('name').value = '';
+                    showMessage('Product added successfully');
+                })
+                .catch(error => {
+                    showMessage(error.message, true);
+                    console.error('Error:', error);
+                });
+        }
+
+        window.searchByBarcode = searchByBarcode;
+        window.searchByName = searchByName;
+        window.removeProduct = removeProduct;
+    </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
