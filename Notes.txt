@@ -1,0 +1,11 @@
+# Connect to MySQL container
+docker-compose exec mysql mysql -u root -p
+
+# Connect to web container
+docker-compose exec web bash
+
+# Install mysql-client for testing (if needed)
+apt-get update && apt-get install -y default-mysql-client
+
+# Try connecting to MySQL
+mysql -h mysql -u root -p
