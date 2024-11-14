@@ -58,6 +58,24 @@ def getUsers():
     
     return usersFromDb
 
+def getPaymentMethod():
+    connection = get_db_connection()
+    if (connection is None):
+        return render_template("error.html")
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
+    try:
+        cursor.execute("SELECT * FROM Payment_Method")
+        pmDb = cursor.fetchall()
+    except pymysql.MySQLError as e:
+        print(f"Error: {e}")
+        pmDb = []
+    finally:
+        cursor.close()
+        connection.close()
+    
+    return pmDb
+
 def getProducts():
     connection = get_db_connection()
     if (connection is None):
@@ -191,6 +209,7 @@ def home():
     return render_template('home.html', products=getProducts())
 
 @app.route('/home/add_product', methods=['GET', 'POST'])
+@login_required
 def new_product():
     if request.method == 'GET':
         connection = get_db_connection()
@@ -287,23 +306,6 @@ def modify_product():
             cursor.close()
             connection.close()
 
-@app.route('/api/payment-methods', methods=['GET'])
-def get_payment_methods():
-    connection = get_db_connection()
-    cursor = connection.cursor()
-        
-    try:
-        cursor.execute("SELECT payment_id, name FROM Payment_Method")
-        methods = cursor.fetchall()
-        
-        cursor.close()
-        connection.close()
-        
-        return jsonify(methods)
-    except Exception as e:
-        print(f"Error fetching payment methods: {str(e)}")
-        return jsonify({'error': 'Failed to fetch payment methods'}), 500
-
 @app.route('/api/checkout', methods=['POST'])
 @login_required
 def checkout():
@@ -396,15 +398,36 @@ def checkout():
 @app.route('/home/ticket', methods=['GET', 'POST'])
 def ticket():
     if (request.method == 'GET'):
-        return render_template('ticket.html')
+        return render_template('ticket.html', pm=getPaymentMethod())
     elif (request.method == 'POST'):
         pass
 
+def getTickets():
+    connection = get_db_connection()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    
+    try:
+        cursor.execute('''SELECT t.ticket_id, u.name AS user_name, t.date, pm.name AS payment_method_name, t.amount  
+                            FROM Ticket t
+                            INNER JOIN User u ON u.user_id = t.user_id
+                            INNER JOIN Payment_Method pm ON pm.payment_id = t.payment_id;''')
+        tickets = cursor.fetchall()
+    except pymysql.MySQLError as e:
+        print(f"Error al obtener tipos de producto: {e}")
+        tickets = []
+    finally:
+        cursor.close()
+        connection.close()
+
+    return tickets
+
 @app.route('/home/show_tickets', methods=['GET'])
+@login_required
 def show_tickets():
-    return render_template('showTickets.html')
+    return render_template('showTickets.html', tickets=getTickets())
 
 @app.route('/home/delete_product', methods=['GET', 'POST'])
+@login_required
 def delete_product():
     if request.method == 'GET':
         connection = get_db_connection()

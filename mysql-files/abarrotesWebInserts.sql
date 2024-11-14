@@ -9,8 +9,8 @@ INSERT INTO User (name, password, is_owner) VALUES
 -- Insert payment methods
 INSERT INTO Payment_Method (name) VALUES
 ('Efectivo'),
-('Tarjeta de crédito'),
-('Tarjeta de débito'),
+('Tarjeta de credito'),
+('Tarjeta de debito'),
 ('Transferencia'),
 ('Vales');
 

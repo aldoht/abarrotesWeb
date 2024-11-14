@@ -64,12 +64,11 @@
                     <div class="search-box">
                         <h4 class="mb-3">Método de Pago</h4>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                            {% for method in pm %}
                             <label class="btn btn-outline-primary">
-                                <input type="radio" name="paymentMethod" value="1" autocomplete="off" checked> Cash
+                                <input type="radio" name="paymentMethod" value="{{method['id']}}" autocomplete="off"> {{method['name']}}
                             </label>
-                            <label class="btn btn-outline-primary">
-                                <input type="radio" name="paymentMethod" value="2" autocomplete="off"> PayPal
-                            </label>
+                            {% endfor %}
                         </div>
                     </div>
 
@@ -106,54 +105,6 @@
             }
         });
 
-        function loadPaymentMethod() {
-        fetch('/api/payment-methods')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch payment methods');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log("Payment methods data:", data);  // Verifica los datos recibidos
-
-                const container = document.getElementById('paymentMethodsContainer');
-                container.innerHTML = ''; // Limpiar contenido existente
-
-                data.forEach(method => {
-                    console.log(method);  // Verifica la estructura de cada objeto
-                    const label = document.createElement('label');
-                    label.className = 'btn btn-outline-primary';
-
-                    const input = document.createElement('input');
-                    input.type = 'radio';
-                    input.name = 'paymentMethod';
-                    input.value = method.payment_id;
-                    input.autocomplete = 'off';
-
-                    label.appendChild(input);
-
-                    // Verifica que "method.name" existe y no es undefined
-                    if (method.name) {
-                        label.appendChild(document.createTextNode(method.name));
-                    } else {
-                        console.error('El nombre del método de pago es undefined');
-                        label.appendChild(document.createTextNode('Método de pago desconocido'));
-                    }
-
-                    container.appendChild(label);
-                });
-
-
-                console.log("Generated HTML for payment methods:", container.innerHTML);  // Verifica el HTML generado
-            })
-            .catch(error => {
-                console.error('Error loading payment methods:', error);
-                showMessage('Failed to load payment methods', true);
-            });
-        }
-
-
         function checkout() {
             if (itemsOnTicket.length === 0) {
                 showMessage('No items to checkout', true);
@@ -166,7 +117,7 @@
                 showMessage('Por favor, seleccione un método de pago.', true);
                 return;
             }
-            const payment_id = paymentMethod.value;
+            const payment_id = paymentMethod.value;  // `value` contiene el `id` del método de pago seleccionado
 
             // Crear el objeto ticketData, validando que cada producto tenga un id
             const ticketData = {
@@ -182,7 +133,7 @@
 
                     return {
                         product_id: item.data.id,
-                        quantity: 1,  // Puedes agregar un input para cantidad
+                        quantity: 1, 
                         unit_price: item.data.unit_price
                     };
                 }).filter(item => item !== null)  // Eliminar productos sin ID
@@ -214,10 +165,6 @@
                 console.error('Error:', error);
             });
         }
-
-
-
-
 
         function displayProducts() {
             const productList = document.getElementById('productList');
