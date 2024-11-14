@@ -1,45 +1,26 @@
 pipeline {
     agent any
-    tools {
-        git "Default"
-    }
     environment {
-        IMAGE_NAME = 'abarrotesweb'
-        DOCKER_HUB_REPO = 'rogelio02/abarrotesweb'
+        REPO_URL = 'https://github.com/aldoht/abarrotesWeb.git'
     }
     stages {
-        stage('Clonar Repositorio') {
+        stage('Clone Repository') {
             steps {
-                git branch: 'master', url: 'https://github.com/aldoht/abarrotesWeb.git'
+                echo 'Cloning the repository...'
+                git url: "https://github.com/aldoht/abarrotesWeb.git", branch: 'master'
             }
         }
-        stage('Construir Imagen Docker') {
+        stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${DOCKER_HUB_REPO}:${env.BUILD_ID}")
-                }
+                echo 'Building Docker image...'
+                sh 'docker compose build'
             }
         }
-        stage('Iniciar sesión en Docker Hub') {
+        stage('Run Docker Containers') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        sh 'echo Sesión iniciada con éxito'
-                    }
-                }
+                echo 'Starting Docker containers...'
+                sh 'docker compose up -d'
             }
-        }
-        stage('Publicar Imagen') {
-            steps {
-                script {
-                    docker.image("${DOCKER_HUB_REPO}:${env.BUILD_ID}").push()
-                }
-            }
-        }
-    }
-    post {
-        always {
-            cleanWs()
         }
     }
 }
