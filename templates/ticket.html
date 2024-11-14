@@ -87,6 +87,52 @@
             }
         });
 
+        function checkout() {
+            if (itemsOnTicket.length === 0) {
+                showMessage('No items to checkout', true);
+                return;
+            }
+
+            const ticketData = {
+                items: itemsOnTicket.map(item => ({
+                    product_id: item.data.id,
+                    barcode: item.data.barcode,
+                    quantity: 1,  // You might want to add quantity input in the UI
+                    unit_price: item.data.unit_price
+                })),
+                total: itemsOnTicket.reduce((sum, item) => {
+                    return sum + (item.data ? parseFloat(item.data.unit_price) : 0);
+                }, 0)
+            };
+
+            console.log(ticketData)
+
+            fetch('/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(ticketData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Checkout failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                showMessage('Checkout successful');
+                itemsOnTicket = [];  // Clear the ticket
+                displayProducts();  // Update the display
+            })
+            .catch(error => {
+                showMessage(error.message, true);
+                console.error('Error:', error);
+            });
+        }
+
         function displayProducts() {
             const productList = document.getElementById('productList');
             productList.innerHTML = '';
