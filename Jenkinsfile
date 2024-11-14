@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Clonar Repositorio') {
             steps {
-                git 'https://github.com/aldoht/abarrotesWeb.git' // Cambia esta URL a la de tu repositorio
+                git branch:'master', url: 'https://github.com/aldoht/abarrotesWeb.git' // Cambia esta URL a la de tu repositorio
             }
         }
         stage('Construir Imagen Docker') {
@@ -17,11 +17,11 @@ pipeline {
                 }
             }
         }
-        stage('Loguearse en Docker Hub') {
+        stage('Iniciar sesión en Docker Hub') {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        sh "echo Logueado con éxito"
+                        sh 'echo Sesión iniciada con éxito'
                     }
                 }
             }
