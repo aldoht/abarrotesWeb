@@ -1,13 +1,16 @@
 pipeline {
     agent any
+    tools {
+        git "Default"
+    }
     environment {
-        IMAGE_NAME = 'abarrotesweb' // Cambia el nombre de la imagen como prefieras
-        DOCKER_HUB_REPO = 'rogelio02/abarrotesweb' // Cambia este nombre
+        IMAGE_NAME = 'abarrotesweb'
+        DOCKER_HUB_REPO = 'rogelio02/abarrotesweb'
     }
     stages {
         stage('Clonar Repositorio') {
             steps {
-                git branch:'master', url: 'https://github.com/aldoht/abarrotesWeb.git' // Cambia esta URL a la de tu repositorio
+                git branch: 'master', url: 'https://github.com/aldoht/abarrotesWeb.git'
             }
         }
         stage('Construir Imagen Docker') {
@@ -36,7 +39,7 @@ pipeline {
     }
     post {
         always {
-            cleanWs()  // Limpia el espacio de trabajo después de cada ejecución
+            cleanWs()
         }
     }
 }
