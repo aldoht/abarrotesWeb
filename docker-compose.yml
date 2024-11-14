@@ -1,29 +1,25 @@
 services:
+  mysql:
+    container_name: mysql
+    image: "mysql:8.1"
+    environment:
+      MYSQL_ROOT_PASSWORD: apolo9494
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: 'abarrotesWeb'
+    volumes:
+      - "mysql-vol:/var/lib/mysql"
+    healthcheck:
+      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD' ]
+      timeout: 15s
+      interval: 15s
+      retries: 10
   web:
     build: .
-    container_name: abarrotesWeb
-    ports:
-      - "5000:5000"
-    environment:
-      - FLASK_ENV=development
-      - MYSQL_HOST=db
-      - MYSQL_PORT=3306
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=apolo9404
-      - MYSQL_DB=abarrotesWeb
+    image: abarrotesweb
     depends_on:
-      - db
-
-  db:
-    image: mysql:8.0
-    container_name: mysql-db
-    environment:
-      MYSQL_ROOT_PASSWORD: apolo9404
-      MYSQL_DATABASE: abarrotesWeb
+       mysql:
+          condition: service_healthy
     ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-
+      - "8000:8080"
 volumes:
-  db_data:
+  mysql-vol:
