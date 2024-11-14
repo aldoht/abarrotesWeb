@@ -1,22 +1,24 @@
-# Usa una imagen base de Python
-FROM python:3.12.5
-LABEL authors=["rogelio02"]
+FROM python:3.9-slim
+WORKDIR /app
 
-# Establece el directorio de trabajo
-WORKDIR /app/
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y \
+    pkg-config \
+    default-libmysqlclient-dev \
+    build-essential \
+    gcc
+    # libssl-dev \
+    # libffi-dev \
+    # python3-dev \
+    # cargo \
+    # && rm -rf /var/lib/apt/lists/*  # Clean up apt cache to reduce image size
 
-# Instala las dependencias
-RUN pip install flask
-RUN pip install flaskmysqldb
-RUN pip install mysqlclient
-RUN pip install Flask-Login
+COPY requirements.txt requirements.txt
+COPY . .
 
+# Install Python packages
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY static static
-COPY templates templates
-COPY app.py app.py
-COPY dbconfig.py dbconfig.py
-
-EXPOSE 8080
-
+EXPOSE 5000
 CMD ["python", "app.py"]

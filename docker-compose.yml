@@ -4,7 +4,7 @@ services:
     image: "mysql:8.1"
     environment:
       MYSQL_ROOT_PASSWORD: apolo9494
-      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_HOST: 'root'
       MYSQL_DATABASE: 'abarrotesWeb'
     volumes:
       - "mysql-vol:/var/lib/mysql"
@@ -15,11 +15,11 @@ services:
       retries: 10
   web:
     build: .
-    image: abarrotesweb
+    image: pia-abarrotesweb
     depends_on:
        mysql:
           condition: service_healthy
     ports:
-      - "8000:8080"
+      - "8000:5000"
 volumes:
   mysql-vol:
