@@ -7,7 +7,7 @@ RUN apt-get update && \
     pkg-config \
     default-libmysqlclient-dev \
     build-essential \
-    gcc \
+    gcc
     # libssl-dev \
     # libffi-dev \
     # python3-dev \
