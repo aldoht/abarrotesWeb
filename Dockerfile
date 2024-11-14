@@ -1,20 +1,22 @@
 # Usa una imagen base de Python
 FROM python:3.12.5
+LABEL authors=["rogelio02"]
 
 # Establece el directorio de trabajo
-WORKDIR /app
-
-# Copia el archivo de dependencias
-COPY requirements.txt requirements.txt
+WORKDIR /app/
 
 # Instala las dependencias
-RUN pip install -r requirements.txt
+RUN pip install flask
+RUN pip install flaskmysqldb
+RUN pip install mysqlclient
+RUN pip install Flask-Login
 
-# Copia el resto de la aplicación
-COPY . .
 
-# Expone el puerto de la aplicación Flask
-EXPOSE 5000
+COPY static static
+COPY templates templates
+COPY app.py app.py
+COPY dbconfig.py dbconfig.py
 
-# Comando para ejecutar la aplicación
+EXPOSE 8080
+
 CMD ["python", "app.py"]
