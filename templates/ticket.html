@@ -59,6 +59,20 @@
                         </div>
                     </div>
                 </div>
+            
+                <div class="container">
+                    <div class="search-box">
+                        <h4 class="mb-3">Método de Pago</h4>
+                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="paymentMethod" value="1" autocomplete="off" checked> Cash
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="paymentMethod" value="2" autocomplete="off"> PayPal
+                            </label>
+                        </div>
+                    </div>
+
                 <div class="col-md-2 d-flex justify-content-center align-items-end">
                     <button class="btn btn-success btn-block" onclick="checkout()">Checkout</button>
                 </div>
@@ -71,10 +85,15 @@
 
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
+        
+        
     </div>
 
     <script>
         let itemsOnTicket = [];
+
+        // Cargar métodos de pago al cargar la página
+        document.addEventListener('DOMContentLoaded', loadPaymentMethods);
 
         document.getElementById('barcode').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -87,26 +106,89 @@
             }
         });
 
+        function loadPaymentMethod() {
+        fetch('/api/payment-methods')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch payment methods');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Payment methods data:", data);  // Verifica los datos recibidos
+
+                const container = document.getElementById('paymentMethodsContainer');
+                container.innerHTML = ''; // Limpiar contenido existente
+
+                data.forEach(method => {
+                    console.log(method);  // Verifica la estructura de cada objeto
+                    const label = document.createElement('label');
+                    label.className = 'btn btn-outline-primary';
+
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = 'paymentMethod';
+                    input.value = method.payment_id;
+                    input.autocomplete = 'off';
+
+                    label.appendChild(input);
+
+                    // Verifica que "method.name" existe y no es undefined
+                    if (method.name) {
+                        label.appendChild(document.createTextNode(method.name));
+                    } else {
+                        console.error('El nombre del método de pago es undefined');
+                        label.appendChild(document.createTextNode('Método de pago desconocido'));
+                    }
+
+                    container.appendChild(label);
+                });
+
+
+                console.log("Generated HTML for payment methods:", container.innerHTML);  // Verifica el HTML generado
+            })
+            .catch(error => {
+                console.error('Error loading payment methods:', error);
+                showMessage('Failed to load payment methods', true);
+            });
+        }
+
+
         function checkout() {
             if (itemsOnTicket.length === 0) {
                 showMessage('No items to checkout', true);
                 return;
             }
 
+            // Obtener el método de pago seleccionado
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!paymentMethod) {
+                showMessage('Por favor, seleccione un método de pago.', true);
+                return;
+            }
+            const payment_id = paymentMethod.value;
+
+            // Crear el objeto ticketData, validando que cada producto tenga un id
             const ticketData = {
-                items: itemsOnTicket.map(item => ({
-                    product_id: item.data.id,
-                    barcode: item.data.barcode,
-                    quantity: 1,  // You might want to add quantity input in the UI
-                    unit_price: item.data.unit_price
-                })),
-                total: itemsOnTicket.reduce((sum, item) => {
+                payment_id: payment_id,  // Usar el método de pago seleccionado
+                amount: itemsOnTicket.reduce((sum, item) => {
                     return sum + (item.data ? parseFloat(item.data.unit_price) : 0);
-                }, 0)
+                }, 0),
+                products: itemsOnTicket.map(item => {
+                    if (!item.data || !item.data.id) {
+                        console.error('Error: El producto no tiene un ID válido', item);
+                        return null;  // Retorna null si falta el ID
+                    }
+
+                    return {
+                        product_id: item.data.id,
+                        quantity: 1,  // Puedes agregar un input para cantidad
+                        unit_price: item.data.unit_price
+                    };
+                }).filter(item => item !== null)  // Eliminar productos sin ID
             };
 
-            console.log(ticketData)
-
+            // Enviar la solicitud de checkout
             fetch('/api/checkout', {
                 method: 'POST',
                 headers: {
@@ -124,14 +206,18 @@
             })
             .then(data => {
                 showMessage('Checkout successful');
-                itemsOnTicket = [];  // Clear the ticket
-                displayProducts();  // Update the display
+                itemsOnTicket = [];  // Limpiar el ticket
+                displayProducts();  // Actualizar la vista de productos
             })
             .catch(error => {
                 showMessage(error.message, true);
                 console.error('Error:', error);
             });
         }
+
+
+
+
 
         function displayProducts() {
             const productList = document.getElementById('productList');
@@ -257,6 +343,7 @@
         window.searchByBarcode = searchByBarcode;
         window.searchByName = searchByName;
         window.removeProduct = removeProduct;
+
     </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

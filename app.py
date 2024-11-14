@@ -313,8 +313,8 @@ def checkout():
     try:
         data = request.get_json()
         
-        if not data or 'products' not in data or not data['products']:
-            return jsonify({'error': 'No items provided'}), 400
+        #if not data or 'products' not in data or not data['products']:
+        #    return jsonify({'error': 'No items provided'}), 400
 
         # Start transaction
         connection.begin()
