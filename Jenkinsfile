@@ -10,6 +10,7 @@ pipeline {
                 git url: "https://github.com/aldoht/abarrotesWeb.git", branch: 'master'
                 echo 'Checking Docker version...'
                 sh 'docker --version'
+                echo 'Funciona hasta aquí'
             }
         }
         stage('Build Docker Image') {
